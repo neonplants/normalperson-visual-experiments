@@ -1,4 +1,4 @@
-// 70s Melt - Custom Color Palette
+// Sunwaves Melt - Custom Color Palette
 // Original structure preserved, colors remapped
 
 let meltShader;
