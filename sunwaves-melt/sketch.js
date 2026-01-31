@@ -49,7 +49,7 @@ float cosRange(float amt, float range, float minimum) {
     return (((1.0 + cos(radians(amt))) * 0.5) * range) + minimum;
 }
 
-// Ripple function - expanding ring with decay
+// Ripple function - expanding ring with decay (subtle)
 float ripple(vec2 p, vec2 center, float time, float active) {
     if (active < 0.5) return 0.0;
 
@@ -64,13 +64,13 @@ float ripple(vec2 p, vec2 center, float time, float active) {
     // Fade out over time
     float fade = max(0.0, 1.0 - time * 0.5);
 
-    // Stronger when actively touching
+    // Subtle strength
     float strength = active > 0.5 ? 0.3 : 0.2;
 
     return ring * fade * strength;
 }
 
-// Displacement - pushes the liquid OUTWARD from touch point
+// Displacement - pushes the liquid OUTWARD from touch point (subtle)
 vec2 displacement(vec2 p, vec2 center, float time, float active, vec2 dragVel) {
     if (active < 0.5 && time > 2.0) return vec2(0.0);
 
@@ -83,16 +83,40 @@ vec2 displacement(vec2 p, vec2 center, float time, float active, vec2 dragVel) {
     // Pull UVs TOWARD center = pattern appears to push OUTWARD
     vec2 toCenter = normalize(center - p + vec2(0.001));
 
-    // Active touch = stronger push + drag influence
+    // Subtle push
     float strength = active > 0.5 ? 0.2 : 0.08 * max(0.0, 1.0 - time * 0.5);
 
-    // Drag velocity pulls UVs opposite to drag direction (so pattern follows finger)
+    // Drag velocity
     vec2 dragInfluence = active > 0.5 ? -dragVel * 0.4 : vec2(0.0);
 
     return (toCenter * strength + dragInfluence) * falloff;
 }
 
-// Color injection - pulls other palette colors into touch area
+// Vortex - rotates the pattern around touch point like stirring
+vec2 vortex(vec2 p, vec2 center, float time, float active) {
+    if (active < 0.5 && time > 2.0) return p;
+
+    float dist = length(p - center);
+    float radius = 0.6;
+    float falloff = smoothstep(radius, 0.0, dist);
+
+    // Rotation amount - stronger when active, fades after release
+    float rotStrength = active > 0.5 ? 0.8 : 0.4 * max(0.0, 1.0 - time * 0.4);
+    float angle = falloff * rotStrength;
+
+    // Rotate p around center
+    vec2 offset = p - center;
+    float cosA = cos(angle);
+    float sinA = sin(angle);
+    vec2 rotated = vec2(
+        offset.x * cosA - offset.y * sinA,
+        offset.x * sinA + offset.y * cosA
+    );
+
+    return center + rotated;
+}
+
+// Color injection - pulls other palette colors into touch area (subtle)
 vec3 colorInject(vec2 p, vec2 center, float time, float active, vec3 blue, vec3 orange, vec3 yellow, vec3 red) {
     if (active < 0.5 && time > 2.0) return vec3(0.0);
 
@@ -117,7 +141,7 @@ vec3 colorInject(vec2 p, vec2 center, float time, float active, vec3 blue, vec3 
         injectedColor = mix(red, blue, (t - 0.75) * 4.0);
     }
 
-    // Strength based on active state
+    // Subtle strength
     float strength = active > 0.5 ? 0.6 : 0.3 * max(0.0, 1.0 - time * 0.4);
 
     return injectedColor * falloff * strength;
@@ -161,7 +185,14 @@ void main()
     // Apply displacement
     p += totalDisp;
 
-    // Calculate ripple distortion
+    // Apply vortex rotation around touch points (stirring effect)
+    p = vortex(p, uTouch0, uTouchTime0, uTouchActive0 + (uTouchTime0 < 2.0 ? 1.0 : 0.0));
+    p = vortex(p, uTouch1, uTouchTime1, uTouchActive1 + (uTouchTime1 < 2.0 ? 1.0 : 0.0));
+    p = vortex(p, uTouch2, uTouchTime2, uTouchActive2 + (uTouchTime2 < 2.0 ? 1.0 : 0.0));
+    p = vortex(p, uTouch3, uTouchTime3, uTouchActive3 + (uTouchTime3 < 2.0 ? 1.0 : 0.0));
+    p = vortex(p, uTouch4, uTouchTime4, uTouchActive4 + (uTouchTime4 < 2.0 ? 1.0 : 0.0));
+
+    // Calculate ripple distortion (subtle)
     float rippleDistort = 0.0;
     rippleDistort += ripple(p, uTouch0, uTouchTime0, uTouchActive0 + (uTouchTime0 < 2.0 ? 1.0 : 0.0));
     rippleDistort += ripple(p, uTouch1, uTouchTime1, uTouchActive1 + (uTouchTime1 < 2.0 ? 1.0 : 0.0));
@@ -177,8 +208,8 @@ void main()
     for(int i=1;i<zoom;i++) {
         float _i = float(i);
         vec2 newp=p;
-        // Add ripple distortion to the melt calculation
-        float rippleMod = 1.0 + rippleDistort * 2.0;
+        // Subtle ripple effect on the melt
+        float rippleMod = 1.0 + rippleDistort * 1.5;
         newp.x+=0.25/_i*sin(_i*p.y+time*cos(ct)*0.5/20.0+0.005*_i)*fScale*rippleMod+xBoost;
         newp.y+=0.25/_i*sin(_i*p.x+time*ct*0.3/40.0+0.03*float(i+15))*fScale*rippleMod+yBoost;
         p=newp;

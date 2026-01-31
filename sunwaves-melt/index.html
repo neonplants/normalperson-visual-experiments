@@ -9,9 +9,105 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { width: 100%; height: 100%; background: #000; overflow: hidden; }
     canvas { display: block; width: 100% !important; height: 100% !important; }
+    .flip {
+      display: inline-block;
+      transform: scaleX(-1);
+      margin-left: -0.21em;
+      margin-right: 0.08em;
+    }
+    .title {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-weight: bold;
+      font-size: 2.5vw;
+      color: #f5f0e1;
+      text-align: center;
+      pointer-events: none;
+      letter-spacing: 0.15em;
+      white-space: nowrap;
+    }
+    .title.glitch {
+      animation: glitch-base 0.35s steps(1) forwards;
+    }
+    .title.glitch::before,
+    .title.glitch::after {
+      content: attr(data-text);
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #f5f0e1;
+      overflow: visible;
+    }
+    .title.glitch::before {
+      animation: slice1 0.35s steps(1) forwards;
+      clip-path: inset(0 0 60% 0);
+    }
+    .title.glitch::after {
+      animation: slice2 0.35s steps(1) forwards;
+      clip-path: inset(40% 0 0 0);
+    }
+    @keyframes glitch-base {
+      0%, 100% { color: #f5f0e1; }
+      8%, 24%, 56%, 72% { color: transparent; }
+      16%, 40%, 64%, 88% { color: #f5f0e1; }
+    }
+    @keyframes slice1 {
+      0% { transform: translateX(-50%); clip-path: inset(0 0 60% 0); }
+      8% { transform: translateX(calc(-50% - 30px)); clip-path: inset(0 0 70% 0); }
+      16% { transform: translateX(calc(-50% + 15px)); clip-path: inset(10% 0 55% 0); }
+      24% { transform: translateX(calc(-50% - 45px)); clip-path: inset(0 0 65% 0); }
+      40% { transform: translateX(calc(-50% + 25px)); clip-path: inset(5% 0 50% 0); }
+      56% { transform: translateX(calc(-50% - 20px)); clip-path: inset(0 0 55% 0); }
+      72% { transform: translateX(calc(-50% + 35px)); clip-path: inset(15% 0 60% 0); }
+      88% { transform: translateX(calc(-50% - 10px)); clip-path: inset(0 0 58% 0); }
+      100% { transform: translateX(-50%); clip-path: inset(0 0 60% 0); }
+    }
+    @keyframes slice2 {
+      0% { transform: translateX(-50%); clip-path: inset(40% 0 0 0); }
+      8% { transform: translateX(calc(-50% + 40px)); clip-path: inset(35% 0 0 0); }
+      16% { transform: translateX(calc(-50% - 25px)); clip-path: inset(50% 0 0 0); }
+      24% { transform: translateX(calc(-50% + 50px)); clip-path: inset(30% 0 0 0); }
+      40% { transform: translateX(calc(-50% - 35px)); clip-path: inset(45% 0 0 0); }
+      56% { transform: translateX(calc(-50% + 20px)); clip-path: inset(55% 0 0 0); }
+      72% { transform: translateX(calc(-50% - 40px)); clip-path: inset(35% 0 0 0); }
+      88% { transform: translateX(calc(-50% + 12px)); clip-path: inset(42% 0 0 0); }
+      100% { transform: translateX(-50%); clip-path: inset(40% 0 0 0); }
+    }
   </style>
 </head>
 <body>
+  <div class="title" id="title" data-text="NORMAL PERSON">NO<span class="flip">R</span>MAL PE<span class="flip">R</span>SON</div>
   <script src="sketch.js"></script>
+  <script>
+    const title = document.getElementById('title');
+    let showingCorbu = false;
+
+    function glitchAndSwitch() {
+      title.classList.add('glitch');
+
+      setTimeout(() => {
+        showingCorbu = !showingCorbu;
+        if (showingCorbu) {
+          title.innerHTML = 'CORBU';
+          title.setAttribute('data-text', 'CORBU');
+        } else {
+          title.innerHTML = 'NO<span class="flip">R</span>MAL PE<span class="flip">R</span>SON';
+          title.setAttribute('data-text', 'NORMAL PERSON');
+        }
+        title.classList.remove('glitch');
+
+        // Schedule next switch
+        const delay = showingCorbu ? 3000 : 10000;
+        setTimeout(glitchAndSwitch, delay);
+      }, 300);
+    }
+
+    // Start cycle after initial 10 seconds
+    setTimeout(glitchAndSwitch, 10000);
+  </script>
 </body>
 </html>
